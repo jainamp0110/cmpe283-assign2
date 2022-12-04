@@ -61,7 +61,7 @@
     
     ![](./images/uname.png)
 
-7) Made the code changes in the linux kernel code.
+7) Made the code changes in the linux kernel code. Overwrite the below files with the files in this repo.
    - **vmx.c**: `/linux-6.0.7/arch/x86/kvm/vmx/vmx.c`
    - **cpuid.c**: `/linux-6.0.7/arch/x86/kvm/cpuid.c` 
 
