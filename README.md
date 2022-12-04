@@ -26,12 +26,12 @@
 1) Downloaded the source code in the VM from [official kernel website](https://www.kernel.org/).
     ```
     sudo apt-get install wget
-    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.0.10.tar.xz
+    wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.0.7.tar.xz
     ```
 
 2) Extract the source code 
     ```
-    tar xvf linux-6.0.10.tar.xz
+    tar xvf linux-6.0.7.tar.xz
     ```
 
 3) Install all required packages before building the kernel.
@@ -41,7 +41,7 @@
 
 4) Configuring the kernel by copying the existing configuration file to a `.config` file
     ```
-    cd linux-6.0.10
+    cd linux-6.0.7
     cp -v /boot/config-$(uname -r) .config
     ```
 
@@ -57,13 +57,13 @@
 6) Bootloader is automatically updated because of the `make install` and now we can reboot the system and check the kernel version
     - `sudo reboot`
     - `uname -mrs` 
-    - Output: **Linux 6.0.10 x86_64**
+    - Output: **Linux 6.0.7 x86_64**
     
-    ![](/images/1.png)
+    ![](./images/uname.png)
 
 7) Made the code changes in the linux kernel code.
-   - **vmx.c**: `/linux-6.0.10/arch/x86/kvm/vmx/vmx.c`
-   - **cpuid.c**: `/linux-6.0.10/arch/x86/kvm/cpuid.c` 
+   - **vmx.c**: `/linux-6.0.7/arch/x86/kvm/vmx/vmx.c`
+   - **cpuid.c**: `/linux-6.0.7/arch/x86/kvm/cpuid.c` 
 
 8) Built and installed modules again
     - `sudo make modules && sudo make modules_install`
@@ -74,17 +74,57 @@
    - `sudo modprode kvm`
    - `sudo modprobe kvm_intel`
   
-10) For testing the functionality, an inner VM was created in the GCP VM. The steps to create an inner VM are as follows:
+10) For testing the functionality, an nested VM was created in the GCP VM. The steps to create an nested VM are as follows:
     - Download the Ubuntu cloud image`.img`(QEMU compatible image) file from this [ubuntu cloud images site] in GCP VM(https://cloud-images.ubuntu.com/).
     ```
-    wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+    wget https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
     ```
     - Install the required qemu packages
     ```
-    sudo apt update && sudo apt install uml-utilities qemu-kvm bridge-utils virtinst libvirt-daemon-system libvirt-clients -y
+    sudo apt update && sudo apt install qemu-kvm -y
     ```
-    - Start the default network that comes with libvert package `sudo virsh net-start default`.
-    
-    - 
+    -Move to the directory where .img file is downloaded. This ubuntu cloud image does not come with a default password for the vm. So, to change the password and login into the vm, perform these following steps(terminal):
+    ```
+    1)  sudo apt-get install cloud-image-utils
 
+    2)  cat >user-data <<EOF
+        #cloud-config
+        password: newpass #new password here
+        chpasswd: { expire: False }
+        ssh_pwauth: True
+        EOF
 
+    3)  cloud-localds user-data.img user-data
+    ```
+    - Now, to run this ubuntu image, execute this:
+    ```
+    sudo qemu-system-x86_64 -enable-kvm -hda bionic-server-cloudimg-amd64.img -drive "file=user-data.img,format=raw" -m 512 -curses -nographic
+    ```
+
+    - **username**: `ubuntu`
+    - **password**: `newpass`
+
+    - Now to check the functionality, we need the cpuid utility package, for that
+    ```
+    sudo apt-get update
+    sudo apt-get install cpuid
+    ```
+
+  - NOTE: Make sure two terminals are open:
+      - the GCP VM terminal(T1)
+      - the nested VM terminal(logged in)(T2)
+
+<br />
+
+11) Testing the CPUID functionality for `%eax=0x4fffffff`
+  - T2: `sudo cpuid -l 0x4fffffff`
+    ![](./images/t21.png)
+  - T1: `sudo dmesg` 
+    ![](./images/t11.png)
+   
+1)  Testing the CPUID functionality for `%eax=0x4ffffffe`
+  - T2: `sudo cpuid -l 0x4ffffffe`
+    ![](./images/t22.png)
+  - T1: `sudo dmesg` 
+    ![](./images/t12.png)
+  
