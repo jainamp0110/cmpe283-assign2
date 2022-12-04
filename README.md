@@ -122,7 +122,7 @@
   - T1: `sudo dmesg` 
     ![](./images/t11.png)
    
-1)  Testing the CPUID functionality for `%eax=0x4ffffffe`
+12)  Testing the CPUID functionality for `%eax=0x4ffffffe`
   - T2: `sudo cpuid -l 0x4ffffffe`
     ![](./images/t22.png)
   - T1: `sudo dmesg` 
